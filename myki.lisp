@@ -9,15 +9,13 @@
 (defun memoize (fn)
   (let ((cache (make-hash-table :test #'equal)))
     (lambda (&rest args)
-      (if (eq :g (car args))
-        (maphash (lambda (k v) (print (list k v))) cache)
-        (multiple-value-bind
+      (multiple-value-bind
           (result exists)
           (gethash args cache)
-          (if exists
-            result
-            (setf (gethash args cache)
-                  (apply fn args))))))))
+        (if exists
+          result
+          (setf (gethash args cache)
+                (apply fn args)))))))
 
 (defun fare (set)
   "Find best fare solely using either money or pass for all given dates"
