@@ -3,6 +3,7 @@
  | Reference brute force solution. Try every possible combination of money and passes.
  |
  | Dates are days from reference date; 0 = (monday <= today)
+ | Dates must be within 365 days of each other
  |#
 
 (defun memoize (fn)
@@ -21,19 +22,20 @@
   (min
     ;; money
     ;; todo: public holiday / weekend daily cap
-    (* 554/100 (length set))
+    (* 554 (length set))
     ;; pass
     (let ((days (1+ (- (car (last set)) (first set)))))
       (if (<= days 7)
         ;; seven day pass
-        2770/100
+        2770
         ;; day passes
-        (* 311/100 (min 325 (max 28 days)))))))
+        (* 311 (min 325 (max 28 days)))))))
 
 (defun best-fare (set)
   (loop for i from 1 to (length set)
         minimize (+ (best-fare (nthcdr i set)) (fare (subseq set 0 i)))))
 
-(setf (fdefinition 'fare) (memoize #'fare))
 (setf (fdefinition 'best-fare) (memoize #'best-fare))
 
+(defun run-test (n)
+  (print (time (best-fare (loop for i below n collect i)))))
