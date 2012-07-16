@@ -34,7 +34,7 @@
 (defun best-fare (set)
   (loop with lowest = 0
         with ranges = nil
-        for i from 1 to (length set)
+        for i from (length set) downto 1
         for head = (subseq set 0 i)
         for tail = (nthcdr i set)
         for (tail-fare tail-ranges) = (best-fare tail)
