@@ -31,9 +31,9 @@
 (defun fare (set)
   "Find best fare solely using either money or pass for all given dates"
   (declare (optimize (speed 3) (safety 0) (debug 0)))
-  (let ((days (1+ (- (car (last set)) (first set)))))
+  (let ((days (1+ (- (the (unsigned-byte 9) (car (last set))) (the (unsigned-byte 9) (first set))))))
     (declare (type (unsigned-byte 9) days))
-    (let ((money (apply #'+ (mapcar #'money-fare set)))
+    (let ((money (loop for i in set sum (the (unsigned-byte 17) (money-fare i))))
           (pass (if (<= days 7)
                   2770
                   (* 311 (min 325 (max 28 days))))))
@@ -44,7 +44,7 @@
         (values money :money)))))
 
 (defun best-fare (set)
-  (declare (optimize (safety 0)))
+  (declare (type list set) (optimize (safety 0)))
   (loop with lowest = 0
         with ranges = nil
         for i from (length set) downto 1
