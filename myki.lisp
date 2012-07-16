@@ -9,31 +9,41 @@
 (defun memoize (fn)
   (let ((cache (make-hash-table :test #'equal)))
     (lambda (&rest args)
-      (multiple-value-bind 
-        (result exists)
-        (gethash args cache)
-        (if exists
-          result
-          (setf (gethash args cache)
-                (apply fn args)))))))
+      (if (eq :g (car args))
+        (maphash (lambda (k v) (print (list k v))) cache)
+        (multiple-value-bind
+          (result exists)
+          (gethash args cache)
+          (if exists
+            result
+            (setf (gethash args cache)
+                  (apply fn args))))))))
 
 (defun fare (set)
-  "Calculate best fare for given set of days (max 365), solely using either money or pass"
-  (min
-    ;; money
-    ;; todo: public holiday / weekend daily cap
-    (* 554 (length set))
-    ;; pass
-    (let ((days (1+ (- (car (last set)) (first set)))))
-      (if (<= days 7)
-        ;; seven day pass
-        2770
-        ;; day passes
-        (* 311 (min 325 (max 28 days)))))))
+  "Find best fare solely using either money or pass for all given dates"
+  ;; todo: public holiday / weekend daily cap
+  (let ((money (* 554 (length set)))
+        (pass  (let ((days (1+ (- (car (last set)) (first set)))))
+                 (if (<= days 7)
+                   2770
+                   (* 311 (min 325 (max 28 days)))))))
+    (if (< money pass)
+      (values money :money)
+      (values pass :pass))))
 
 (defun best-fare (set)
-  (loop for i from 1 to (length set)
-        minimize (+ (best-fare (nthcdr i set)) (fare (subseq set 0 i)))))
+  (loop with lowest = 0
+        with ranges = nil
+        for i from 1 to (length set)
+        for head = (subseq set 0 i)
+        for tail = (nthcdr i set)
+        for (tail-fare tail-ranges) = (best-fare tail)
+        for head-fare = (fare head)
+        for total-fare = (+ head-fare tail-fare)
+        if (or (zerop lowest) (< total-fare lowest)) do
+          (setq lowest total-fare
+                ranges (list* head tail-ranges))
+        finally (return (list lowest ranges))))
 
 (setf (fdefinition 'best-fare) (memoize #'best-fare))
 
