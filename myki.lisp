@@ -55,7 +55,7 @@
             (fare head)
           (declare (type (unsigned-byte 17) head-fare)
                    (type keyword head-fare-type))
-          (multiple-value-bind (tail-fare tail-ranges)
+          (destructuring-bind (tail-fare . tail-ranges)
               (best-fare tail)
             (declare (type (unsigned-byte 17) tail-fare)
                      (type list tail-ranges))
@@ -64,18 +64,21 @@
               (if (or (zerop lowest) (< total-fare lowest))
                 (psetq lowest total-fare
                        ranges (list* head-fare-type head tail-ranges))))))
-          finally (return (values lowest ranges))))
+          finally (return (cons lowest ranges))))
 
 (setf (fdefinition 'best-fare) (memoize #'best-fare))
 
+(defun ibest-fare (set)
+  (car (best-fare set)))
+
 (defun run-tests ()
-  (assert (= 101075 (best-fare (loop for i from 0 below 365 collect i))))
-  (assert (= 101075 (best-fare (loop for i from 0 below 325 collect i))))
-  (assert (= 46650 (best-fare (loop for i from 0 below 150 collect i))))
-  (assert (= 2216 (best-fare (list 1 2 8 9))))
-  (assert (= 1992 (best-fare (list 1 5 8 9))))
-  (assert (= 0 (best-fare nil)))
-  (assert (= 554 (best-fare (list 3)))))
+  (assert (= 101075 (ibest-fare (loop for i from 0 below 365 collect i))))
+  (assert (= 101075 (ibest-fare (loop for i from 0 below 325 collect i))))
+  (assert (= 46650 (ibest-fare (loop for i from 0 below 150 collect i))))
+  (assert (= 2216 (ibest-fare (list 1 2 8 9))))
+  (assert (= 1992 (ibest-fare (list 1 5 8 9))))
+  (assert (= 0 (ibest-fare nil)))
+  (assert (= 554 (ibest-fare (list 3)))))
 
 ;(run-tests)
 
